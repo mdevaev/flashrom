@@ -437,6 +437,13 @@ programmer = {
     'srcs'    : files('usbblaster_spi.c'),
     'flags'   : [ '-DCONFIG_USBBLASTER_SPI=1' ],
   },
+  'vl805' : {
+    'systems' : systems_hwaccess,
+    'deps'    : [ libpci ],
+    'groups'  : [ group_pci, group_internal ],
+    'srcs'    : files('vl805.c', 'pcidev.c'),
+    'flags'   : [ '-DCONFIG_VL805=1' ],
+  },
 }
 
 active_programmer_count = 0
