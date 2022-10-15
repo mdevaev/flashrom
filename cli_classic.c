@@ -55,6 +55,7 @@ static void cli_classic_usage(const char *name)
 	       " -V | --verbose                     more verbose output\n"
 	       " -c | --chip <chipname>             probe only for specified flash chip\n"
 	       " -f | --force                       force specific operations (see man page)\n"
+	       " -t | --truncate                    truncate extra FFs from the read flash\n"
 	       " -n | --noverify                    don't auto-verify\n"
 	       " -N | --noverify-all                verify included regions only (cf. -i)\n"
 	       " -x | --extract                     extract regions to files\n"
@@ -419,7 +420,7 @@ static int write_buf_to_include_args(const struct flashrom_layout *const layout,
 	return 0;
 }
 
-static int do_read(struct flashctx *const flash, const char *const filename)
+static int do_read(struct flashctx *const flash, const char *const filename, bool truncate_end)
 {
 	int ret;
 
@@ -438,6 +439,12 @@ static int do_read(struct flashctx *const flash, const char *const filename)
 		ret = 1;
 		goto free_out;
 	}
+	if (truncate_end) {
+	    for (; size; --size) {
+		    if (buf[size - 1] != 0xff)
+			    break;
+	    }
+	}
 	if (filename)
 		ret = write_buf_to_file(buf, size, filename);
 
@@ -449,7 +456,7 @@ free_out:
 static int do_extract(struct flashctx *const flash)
 {
 	prepare_layout_for_extraction(flash);
-	return do_read(flash, NULL);
+	return do_read(flash, NULL, false);
 }
 
 static int do_write(struct flashctx *const flash, const char *const filename, const char *const referencefile)
@@ -535,6 +542,7 @@ int main(int argc, char *argv[])
 	bool enable_wp = false, disable_wp = false, print_wp_status = false;
 	bool set_wp_range = false, set_wp_region = false, print_wp_ranges = false;
 	bool read_it = false, extract_it = false, write_it = false, erase_it = false, verify_it = false;
+	bool truncate_end = false;
 	bool dont_verify_it = false, dont_verify_all = false;
 	bool list_supported = false;
 	bool show_progress = false;
@@ -557,12 +565,13 @@ int main(int argc, char *argv[])
 	};
 	int ret = 0;
 
-	static const char optstring[] = "r:Rw:v:nNVEfc:l:i:p:Lzho:x";
+	static const char optstring[] = "r:Rw:v:tnNVEfc:l:i:p:Lzho:x";
 	static const struct option long_options[] = {
 		{"read",		1, NULL, 'r'},
 		{"write",		1, NULL, 'w'},
 		{"erase",		0, NULL, 'E'},
 		{"verify",		1, NULL, 'v'},
+		{"truncate",		0, NULL, 't'},
 		{"noverify",		0, NULL, 'n'},
 		{"noverify-all",	0, NULL, 'N'},
 		{"extract",		0, NULL, 'x'},
@@ -647,6 +656,9 @@ int main(int argc, char *argv[])
 			}
 			filename = strdup(optarg);
 			verify_it = true;
+			break;
+		case 't':
+			truncate_end = true;
 			break;
 		case 'n':
 			if (verify_it) {
@@ -989,7 +1001,7 @@ int main(int argc, char *argv[])
 			}
 			msg_cinfo("Please note that forced reads most likely contain garbage.\n");
 			flashrom_flag_set(&flashes[0], FLASHROM_FLAG_FORCE, force);
-			ret = do_read(&flashes[0], filename);
+			ret = do_read(&flashes[0], filename, false);
 			free(flashes[0].chip);
 			goto out_shutdown;
 		}
@@ -1150,7 +1162,7 @@ int main(int argc, char *argv[])
 	 */
 	programmer_delay(100000);
 	if (read_it)
-		ret = do_read(fill_flash, filename);
+		ret = do_read(fill_flash, filename, truncate_end);
 	else if (extract_it)
 		ret = do_extract(fill_flash);
 	else if (erase_it) {

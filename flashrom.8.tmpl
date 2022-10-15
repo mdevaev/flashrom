@@ -101,6 +101,15 @@ operation. In case of erase errors it is even re-read completely. After
 writing has finished and if verification is enabled, the whole flash chip is
 read out and compared with the input image.
 .TP
+.B "\-t, \-\-truncate"
+Truncate the end of the read ROM content, which is filled with 0xFF.
+.sp
+Typical usage is:
+.B "flashrom \-p prog \-t \-r <file>"
+.sp
+This option is only useful in combination with
+.BR \-\-read .
+.TP
 .B "\-n, \-\-noverify"
 Skip the automatic verification of flash ROM contents after writing. Using this
 option is
