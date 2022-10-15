@@ -152,6 +152,7 @@ DEPENDS_ON_LIBPCI := \
 	CONFIG_OGP_SPI \
 	CONFIG_SATAMV \
 	CONFIG_SATASII \
+	CONFIG_VL805 \
 
 DEPENDS_ON_LIBUSB1 := \
 	CONFIG_CH341A_SPI \
@@ -531,6 +532,9 @@ CONFIG_JLINK_SPI ?= no
 # National Instruments USB-845x is Windows only and needs a proprietary library.
 CONFIG_NI845X_SPI ?= no
 
+# Enable VIA VL805 programmer for now.
+CONFIG_VL805 ?= yes
+
 # Disable wiki printing by default. It is only useful if you have wiki access.
 CONFIG_PRINT_WIKI ?= no
 
@@ -765,6 +769,12 @@ FEATURE_FLAGS += -D'CONFIG_MSTARDDC_SPI=1'
 PROGRAMMER_OBJS += mstarddc_spi.o
 endif
 
+ifeq ($(CONFIG_VL805), yes)
+FEATURE_CFLAGS += -D'CONFIG_VL805=1'
+PROGRAMMER_OBJS += vl805.o
+NEED_PCI := yes
+endif
+
 ifeq ($(CONFIG_CH341A_SPI), yes)
 FEATURE_FLAGS += -D'CONFIG_CH341A_SPI=1'
 PROGRAMMER_OBJS += ch341a_spi.o
@@ -788,6 +798,11 @@ endif
 ifeq ($(CONFIG_NI845X_SPI), yes)
 FEATURE_FLAGS += -D'CONFIG_NI845X_SPI=1'
 PROGRAMMER_OBJS += ni845x_spi.o
+endif
+
+ifeq ($(CONFIG_VL805), yes)
+FEATURE_FLAGS += -D'CONFIG_VL805=1'
+PROGRAMMER_OBJS += vl805.o
 endif
 
 USE_BITBANG_SPI := $(if $(call filter_deps,$(DEPENDS_ON_BITBANG_SPI)),yes,no)

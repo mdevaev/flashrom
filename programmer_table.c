@@ -171,6 +171,10 @@ const struct programmer_entry *const programmer_table[] = {
 #if CONFIG_DIRTYJTAG_SPI == 1
     &programmer_dirtyjtag_spi,
 #endif
+
+#if CONFIG_VL805 == 1
+	&programmer_vl805,
+#endif
 };
 
 const size_t programmer_table_size = ARRAY_SIZE(programmer_table);
